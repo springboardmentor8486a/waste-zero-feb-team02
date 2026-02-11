@@ -1,7 +1,20 @@
-const express = require("express");
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import userRoutes from "./routes/user.routes.js";
+import mongoose from "mongoose";
+import connectDB from "./dbconfig/config.js";
 
 const app = express();
+dotenv.config();
+
+app.use(cors());
+
 const PORT = 3000;
+
+
+connectDB();
+
 
 
 app.use(express.json())
@@ -9,9 +22,8 @@ app.get("/", (req, res) => {
   res.send("Hello World from Express server!");
 });
 
-app.get("/api", (req, res) => {
-  res.json({ message: "API is working!" });
-});
+app.use("/api/v1", userRoutes);
+
 
 
 app.listen(PORT, () => {
