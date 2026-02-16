@@ -1,0 +1,8 @@
+import { create } from 'zustand'
+import { createCounterSlice } from './slices/counterSlice'
+import { createThemeSlice } from './slices/themeSlice'
+
+export const useAppStore = create((set, get) => ({
+  ...createThemeSlice(set, get),
+  ...createCounterSlice(set),
+}))

@@ -1,5 +1,6 @@
 import { loginUser, registerUser, generateAccessToken, getUserProfile, updateUserProfile} from "../controllers/user.controller.js";
 import { authenticateToken } from "../middleware/user.middleware.js";
+import jwt from "jsonwebtoken";
 
 import express from "express";
 
