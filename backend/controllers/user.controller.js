@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 
 
@@ -44,7 +45,9 @@ export const generateAccessToken = (user) => {
         email: user.email,
         role: user.role
     };
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+    return jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1h"
+    });
 };
 
 export const generateRefreshToken = (user) => {
@@ -54,7 +57,9 @@ export const generateRefreshToken = (user) => {
         email: user.email,
         role: user.role
     };
-    return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
+    return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "7d"
+    });
 };
 
 
