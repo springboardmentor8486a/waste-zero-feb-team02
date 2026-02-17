@@ -56,11 +56,41 @@ src/
   App.jsx
   main.jsx
   index.css
+  api/
+    axiosClient.js
+    authApi.js
+    userApi.js
+  utils/
+    storage.js
+    apiError.js
   store/
     useAppStore.js
     slices/
-      counterSlice.js
+      authSlice.js
+      userSlice.js
       themeSlice.js
+  components/
+    auth/
+      ProtectedRoute.jsx
+    profile/
+      ProfileDetailsForm.jsx
+      ChangePasswordForm.jsx
+    layout/
+      Navbar.jsx
+      Header.jsx
+      Footer.jsx
+      DashboardLayout.jsx
+      DashboardSidebar.jsx
+    theme/
+      ThemeControl.jsx
+  pages/
+    LandingPage.jsx
+    LoginPage.jsx
+    SignupPage.jsx
+    VerifyEmail.jsx
+    ProfilePage.jsx
+    VolunteerDashboard.jsx
+    NGODashboard.jsx
 ```
 
 ## Environment Variables (.env)
@@ -75,6 +105,19 @@ src/
 ### Current env template
 
 Use `.env.example` as the source of truth for required keys.
+
+```env
+VITE_APP_ENV=development
+VITE_APP_NAME=Waste Zero
+VITE_API_BASE_URL=http://localhost:3000/api/v1
+VITE_ENABLE_DEBUG_LOGS=false
+```
+
+### Required key used by app runtime
+
+- `VITE_API_BASE_URL`: backend base URL consumed by `src/api/axiosClient.js`
+
+Other keys in `.env.example` are metadata/flags and are safe defaults.
 
 ### Adding a new env key
 
@@ -115,26 +158,35 @@ This keeps theme consistent across refreshes using `localStorage`.
 
 ## Zustand State Management
 
-Global state is organized with a root store + feature slices.
+Global state is organized with a root store + feature slices:
 
 - Root store: `src/store/useAppStore.js`
+- Auth slice: `src/store/slices/authSlice.js`
+- User slice: `src/store/slices/userSlice.js`
 - Theme slice: `src/store/slices/themeSlice.js`
-- Counter slice: `src/store/slices/counterSlice.js`
+
+### Auth flow implemented
+
+- Login calls `POST /login`, stores `accessToken` + `refreshToken` in localStorage.
+- Axios request interceptor adds `Authorization: Bearer <token>`.
+- Axios response interceptor refreshes access token via `POST /refresh-token`.
+- Current profile is fetched from `GET /me` and cached in `userSlice`.
+- Profile updates use `PUT /me`.
+- Email verification page uses `GET /verify-email?token=<token>`.
+- Password change from Profile page uses `PUT /me/password`.
 
 ### Pattern to add new state
 
 1. Create a new slice file in `src/store/slices/`.
-2. Export a slice creator function, for example `createAuthSlice`.
-3. Compose the slice in `src/store/useAppStore.js`.
-4. Consume state/actions with selectors in components.
-
-Example usage:
+2. Export a slice creator function.
+3. Compose it in `src/store/useAppStore.js`.
+4. Use selectors in components.
 
 ```js
 import { useAppStore } from './store/useAppStore'
 
-const value = useAppStore((state) => state.value)
-const setValue = useAppStore((state) => state.setValue)
+const currentUser = useAppStore((state) => state.currentUser)
+const updateCurrentUser = useAppStore((state) => state.updateCurrentUser)
 ```
 
 ## How To Add New Features

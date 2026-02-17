@@ -1,4 +1,13 @@
-import { loginUser, registerUser, generateAccessToken, getUserProfile, updateUserProfile, verifyEmail } from "../controllers/user.controller.js";
+import {
+    changeUserPassword,
+    generateAccessToken,
+    getUserProfile,
+    loginUser,
+    requestEmailVerification,
+    registerUser,
+    updateUserProfile,
+    verifyEmail,
+} from "../controllers/user.controller.js";
 
 import { authenticateToken } from "../middleware/user.middleware.js";
 import jwt from "jsonwebtoken";
@@ -13,6 +22,8 @@ router.post("/login", loginUser);
 
 router.get("/me", authenticateToken, getUserProfile);
 router.put("/me", authenticateToken, updateUserProfile);
+router.put("/me/password", authenticateToken, changeUserPassword);
+router.post("/me/verify-email", authenticateToken, requestEmailVerification);
 
 
 
