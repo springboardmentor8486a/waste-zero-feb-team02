@@ -1,4 +1,5 @@
-import { loginUser, registerUser, generateAccessToken, getUserProfile, updateUserProfile} from "../controllers/user.controller.js";
+import { loginUser, registerUser, generateAccessToken, getUserProfile, updateUserProfile, verifyEmail } from "../controllers/user.controller.js";
+
 import { authenticateToken } from "../middleware/user.middleware.js";
 import jwt from "jsonwebtoken";
 
@@ -7,7 +8,9 @@ import express from "express";
 const router = express.Router();
 
 router.post("/register", registerUser);
+router.get("/verify-email", verifyEmail);
 router.post("/login", loginUser);
+
 router.get("/me", authenticateToken, getUserProfile);
 router.put("/me", authenticateToken, updateUserProfile);
 

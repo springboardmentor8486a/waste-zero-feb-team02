@@ -1,6 +1,8 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import sendEmail from "../utils/email.js";
+
 
 
 
@@ -8,18 +10,21 @@ export const registerUser = async (req, res) => {
     try {
         const { name, email, password, role, skills, location, bio } = req.body;
 
-        
+
         if (!name || !email || !password || !role) {
             return res.status(400).json({ message: "Name, email, password, and role are required" });
         }
-        
+
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "User already exists" });
         }
-        
+
         const hashedPassword = await bcrypt.hash(password, 10);
-        
+
+        // Generate verification token
+        const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '24h' });
+
         const newUser = new User({
             name,
             email,
@@ -27,14 +32,66 @@ export const registerUser = async (req, res) => {
             role,
             skills,
             location,
-            bio
+            bio,
+            verificationToken
         });
         await newUser.save();
-        res.status(201).json({ message: "User registered successfully" });
+
+        // In a real app, we would send an email here. 
+        const verificationLink = `http://localhost:5173/verify-email?token=${verificationToken}`;
+
+        try {
+            await sendEmail({
+                email: newUser.email,
+                subject: 'Verify your WasteZero account',
+                message: `Welcome to WasteZero! Please verify your email by clicking the link: ${verificationLink}`,
+                html: `
+                    <h1>Welcome to WasteZero</h1>
+                    <p>Please click the button below to verify your email address:</p>
+                    <a href="${verificationLink}" style="display:inline-block; background-color:#4f46e5; color:white; padding:12px 24px; text-decoration:none; border-radius:8px; font-weight:bold;">Verify Email</a>
+                    <p>Or copy and paste this link: <br> ${verificationLink}</p>
+                `
+            });
+            console.log(`Verification email sent to ${newUser.email}`);
+        } catch (emailError) {
+            console.error('Error sending verification email:', emailError);
+            // We don't want to throw an error here, the user is already registered.
+            // They can request resend later or we can notify them.
+        }
+
+        res.status(201).json({
+            message: "User registered successfully. Please check your email for verification link.",
+            verificationLink // Still return link in dev mode for testing
+        });
     } catch (error) {
         res.status(500).json({ message: "Server error", error });
     }
 };
+
+export const verifyEmail = async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) {
+            return res.status(400).json({ message: "Verification token is required" });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findOne({ email: decoded.email, verificationToken: token });
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid or expired verification token" });
+        }
+
+        user.emailVerified = true;
+        user.verificationToken = undefined;
+        await user.save();
+
+        res.status(200).json({ message: "Email verified successfully" });
+    } catch (error) {
+        res.status(400).json({ message: "Invalid or expired token", error });
+    }
+};
+
 
 
 // generate JWT token
@@ -72,7 +129,7 @@ export const loginUser = async (req, res) => {
         if (!email || !password) {
             return res.status(400).json({ message: "Email and password are required" });
         }
-        
+
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(400).json({ message: "Invalid email or password" });
@@ -106,7 +163,7 @@ export const getUserProfile = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
     try {
         const { name, skills, location, bio } = req.body;
-        
+
         if (!name && !skills && !location && !bio) {
             return res.status(400).json({ message: "At least one field (name, skills, location, bio) is required to update" });
         }

@@ -9,11 +9,12 @@ const userSchema = new mongoose.Schema({
     location: String,
     bio: String,
     emailVerified: { type: Boolean, default: false },
+    verificationToken: String,
     createdAt: { type: Date, default: Date.now },
+
     updatedAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model("User", userSchema);
 export default User;
 
-  

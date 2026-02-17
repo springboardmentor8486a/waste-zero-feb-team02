@@ -1,42 +1,66 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAppStore } from './store/useAppStore'
+import Layout from './components/layout/Layout'
+import ProtectedRoute from './components/auth/ProtectedRoute'
+import VolunteerDashboard from './pages/VolunteerDashboard'
+import NGODashboard from './pages/NGODashboard'
+import VerifyEmail from './pages/VerifyEmail'
+import { useState } from 'react'
 
-function App() {
-  const theme = useAppStore((state) => state.theme)
-  const toggleTheme = useAppStore((state) => state.toggleTheme)
-  const count = useAppStore((state) => state.count)
-  const increment = useAppStore((state) => state.increment)
+
+// Placeholder Login Component for Milestone 1 Testing
+const LoginPlaceholder = () => {
+  const setAuth = useAppStore((state) => state.setAuth)
+  const isAuthenticated = useAppStore((state) => state.isAuthenticated)
+  const user = useAppStore((state) => state.user)
+  const [role, setRole] = useState('volunteer')
+
+  if (isAuthenticated) {
+    const redirectPath = user?.role === 'NGO' ? '/dashboard/ngo' : '/dashboard/volunteer'
+    return <Navigate to={redirectPath} replace />
+  }
+
+  const handleLogin = (selectedRole) => {
+    // Mock user and token
+    const mockUser = {
+      id: '123',
+      name: selectedRole === 'volunteer' ? 'John Doe' : 'Impact Organization',
+      email: selectedRole === 'volunteer' ? 'john@example.com' : 'contact@impact.org',
+      role: selectedRole === 'volunteer' ? 'volunteer' : 'NGO',
+      location: 'New York, NY',
+      skills: selectedRole === 'volunteer' ? ['React', 'Environment', 'Teaching'] : [],
+      bio: selectedRole === 'volunteer' ? 'Passionate about environmental sustainability.' : 'Working to provide education for all.',
+      emailVerified: false
+    }
+    setAuth(mockUser, 'mock-jwt-token')
+  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-colors dark:border-slate-700 dark:bg-slate-900">
-        <div className="mb-8 flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
-            Tailwind Setup
-          </h1>
+    <div className="flex min-h-screen items-center justify-center p-4 bg-slate-50 dark:bg-slate-950">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <h1 className="text-2xl font-bold mb-6 text-center dark:text-white">WasteZero Login</h1>
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600 dark:text-slate-400 text-center mb-6">Select a profile to test the dashboard role-based access.</p>
           <button
-            type="button"
-            onClick={toggleTheme}
-            className="rounded-lg border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+            onClick={() => handleLogin('volunteer')}
+            className="w-full flex items-center justify-between rounded-xl border border-slate-200 p-4 transition hover:bg-slate-50 hover:border-indigo-300 dark:border-slate-700 dark:hover:bg-slate-800"
           >
-            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            <div className="text-left">
+              <p className="font-semibold dark:text-white">Volunteer User</p>
+              <p className="text-xs text-slate-500">Test volunteer dashboard</p>
+            </div>
+            <div className="h-4 w-4 rounded-full border-2 border-slate-300"></div>
           </button>
-        </div>
 
-        <p className="mb-6 text-slate-600 dark:text-slate-300">
-          This Vite React project is configured with Tailwind CSS and Zustand for
-          state management.
-        </p>
-
-        <div className="rounded-xl bg-slate-100 p-6 dark:bg-slate-800">
-          <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">
-            Counter example
-          </p>
           <button
-            type="button"
-            onClick={increment}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+            onClick={() => handleLogin('NGO')}
+            className="w-full flex items-center justify-between rounded-xl border border-slate-200 p-4 transition hover:bg-slate-50 hover:border-emerald-300 dark:border-slate-700 dark:hover:bg-slate-800"
           >
-            count is {count}
+            <div className="text-left">
+              <p className="font-semibold dark:text-white">NGO Organization</p>
+              <p className="text-xs text-slate-500">Test NGO dashboard</p>
+            </div>
+            <div className="h-4 w-4 rounded-full border-2 border-slate-300"></div>
           </button>
         </div>
       </div>
@@ -44,4 +68,45 @@ function App() {
   )
 }
 
+function App() {
+  const theme = useAppStore((state) => state.theme)
+
+  return (
+    <BrowserRouter>
+      <div className={theme === 'dark' ? 'dark' : ''}>
+        <Routes>
+          <Route path="/login" element={<LoginPlaceholder />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+
+          <Route
+            path="/dashboard/volunteer"
+            element={
+              <ProtectedRoute allowedRoles={['volunteer']}>
+                <Layout>
+                  <VolunteerDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/ngo"
+            element={
+              <ProtectedRoute allowedRoles={['NGO']}>
+                <Layout>
+                  <NGODashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
+  )
+}
+
 export default App
+
