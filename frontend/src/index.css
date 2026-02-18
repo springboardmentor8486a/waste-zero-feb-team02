@@ -1,20 +1,41 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
 
 @layer base {
+  :root {
+    font-family: "Poppins", sans-serif;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
   html,
   body,
   #root {
     min-height: 100%;
+    width: 100%;
   }
 
   body {
-    @apply m-0 bg-slate-50 text-slate-900 antialiased transition-colors duration-300;
+    @apply m-0 bg-emerald-50 text-slate-900 antialiased transition-colors duration-300;
   }
 
   html.dark body,
   html[data-theme='dark'] body {
-    @apply bg-slate-950 text-slate-100;
+    @apply bg-emerald-950 text-slate-100;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    font-family: inherit;
   }
 }
 

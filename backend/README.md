@@ -4,9 +4,13 @@ Backend API for Waste Zero user authentication and profile management.
 
 ## What This Service Does
 - Registers users (`volunteer` or `NGO`)
+- Sends email verification links on signup
+- Verifies user emails from tokenized links
 - Logs users in with JWT access + refresh tokens
+- Blocks login for unverified emails and returns a fresh verification link
 - Returns authenticated user profile
 - Updates authenticated user profile
+- Changes authenticated user password
 
 ## Tech Stack
 - Node.js (ES modules)
@@ -29,6 +33,7 @@ backend/
 |  `- User.js
 |- routes/
 |  `- user.routes.js
+|- .env.example
 |- .env.samples
 |- .gitignore
 |- package.json
@@ -46,7 +51,7 @@ backend/
 npm install
 
 # 2) Create local env file
-cp .env.samples .env
+cp .env.example .env
 
 # 3) Fill env values in .env
 
@@ -56,18 +61,32 @@ npm run dev
 
 Server starts at `http://localhost:3000`.
 
+Note: `.env.samples` is also provided and kept consistent with `.env.example`.
+
 `server.js` uses `PORT` from `.env` and falls back to `3000` if not set.
 
 ## Environment Variables
-Use `.env.samples` as template.
+Use `.env.example` as template.
 
 ```env
+# Database
 MONGO_URI=your_mongodb_connection_string
+
+# JWT
 JWT_SECRET=your_jwt_secret_key
 JWT_REFRESH_SECRET=your_jwt_refresh_secret_key
-ACCESS_TOKEN_EXPIRY=1h
+ACCESS_TOKEN_EXPIRY=15m
 REFRESH_TOKEN_EXPIRY=7d
+
+# Server
 PORT=3000
+FRONTEND_URL=http://localhost:5173
+
+# Email (SMTP)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@example.com
+EMAIL_PASS=your_email_app_password
 ```
 
 ### Variable Details
@@ -77,6 +96,8 @@ PORT=3000
 - `ACCESS_TOKEN_EXPIRY` (optional): access token lifetime (default fallback: `1h`)
 - `REFRESH_TOKEN_EXPIRY` (optional): refresh token lifetime (default fallback: `7d`)
 - `PORT` (optional): server port (default fallback: `3000`)
+- `FRONTEND_URL` (optional): used to build verification links (default fallback: `http://localhost:5173`)
+- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`: SMTP settings used by `utils/email.js`
 
 ## API Guide
 Base URL: `http://localhost:3000/api/v1`
@@ -111,8 +132,19 @@ Base URL: `http://localhost:3000/api/v1`
   - `accessToken`
   - `refreshToken`
   - basic user payload
+- If email is not verified, returns `403` and includes:
+  - `message`
+  - `verificationLink`
 
-### 3) Get Current User
+### 3) Verify Email
+- Method: `GET`
+- Path: `/verify-email`
+- Query:
+```text
+token=<verification_token>
+```
+
+### 4) Get Current User
 - Method: `GET`
 - Path: `/me`
 - Auth header:
@@ -120,7 +152,7 @@ Base URL: `http://localhost:3000/api/v1`
 Authorization: Bearer <accessToken>
 ```
 
-### 4) Update Current User
+### 5) Update Current User
 - Method: `PUT`
 - Path: `/me`
 - Auth header:
@@ -137,7 +169,22 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-### 5) Refresh Access Token
+### 6) Change Password
+- Method: `PUT`
+- Path: `/me/password`
+- Auth header:
+```http
+Authorization: Bearer <accessToken>
+```
+- Body:
+```json
+{
+  "currentPassword": "StrongPassword123",
+  "newPassword": "NewStrongPassword456"
+}
+```
+
+### 7) Refresh Access Token
 - Method: `POST`
 - Path: `/refresh-token`
 - Body:
@@ -159,9 +206,18 @@ curl -X POST http://localhost:3000/api/v1/login \
   -H "Content-Type: application/json" \
   -d '{"email":"alex@example.com","password":"StrongPassword123"}'
 
+# Verify email
+curl -X GET "http://localhost:3000/api/v1/verify-email?token=<token>"
+
 # Get profile
 curl -X GET http://localhost:3000/api/v1/me \
   -H "Authorization: Bearer <accessToken>"
+
+# Change password
+curl -X PUT http://localhost:3000/api/v1/me/password \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "Content-Type: application/json" \
+  -d '{"currentPassword":"StrongPassword123","newPassword":"NewStrongPassword456"}'
 ```
 
 ## `.gitignore` Instructions
@@ -174,7 +230,7 @@ node_modules
 Team rules:
 - Keep `.env` ignored at all times
 - Never commit secrets or tokens
-- Commit `.env.samples` with placeholder values only
+- Commit `.env.example` / `.env.samples` with placeholder values only
 - Keep `node_modules` ignored
 - If new generated files appear (logs/build artifacts), add them to `.gitignore`
 
