@@ -44,9 +44,11 @@ const AuthLayout = ({ children }) => {
 
       {/* RIGHT SIDE (FORM AREA) */}
       <div className="w-full md:w-1/2 flex items-center justify-center bg-white dark:bg-slate-900 transition-colors duration-300">
-        <div className="w-full max-w-md p-8">
-          {children}
-        </div>
+        <div className="w-full max-w-md
+opacity-0 animate-fadeIn">
+  {children}
+</div>
+
       </div>
 
     </div>

@@ -1,6 +1,7 @@
 import AuthLayout from "./AuthLayout";
+import { Link } from "react-router-dom";
 
-export default function Signup({ goToLogin }) {
+export default function Signup({ form, handleChange, handleSubmit }) {
   return (
     <AuthLayout>
 
@@ -43,13 +44,14 @@ export default function Signup({ goToLogin }) {
       </form>
 
       <p className="text-center mt-6 text-sm text-gray-600 dark:text-gray-300">
-        Already have an account?{" "}
-        <span
-          onClick={goToLogin}
-          className="text-emerald-600 cursor-pointer hover:underline"
-        >
-          Login
-        </span>
+        Already have an account?
+<Link
+  to="/login"
+  className="text-emerald-400 font-semibold hover:underline"
+>
+  Login
+</Link>
+
       </p>
 
     </AuthLayout>
