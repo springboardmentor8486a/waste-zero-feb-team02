@@ -1,25 +1,34 @@
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import sendEmail from "../utils/email.js";
 
-const getFrontendBaseUrl = () =>
-  (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
+const EMAIL_VERIFICATION_CODE_TTL_MINUTES = Number(
+  process.env.EMAIL_VERIFICATION_CODE_TTL_MINUTES || 10,
+);
+const EMAIL_VERIFICATION_CODE_REGEX = /^[0-9]{6}$/;
 
-const buildVerificationLink = (token) =>
-  `${getFrontendBaseUrl()}/verify-email?token=${token}`;
+const generateEmailVerificationCode = () =>
+  crypto.randomInt(0, 1000000).toString().padStart(6, "0");
 
-const sendVerificationEmail = async (email, verificationLink) => {
+const hashEmailVerificationCode = (code) =>
+  crypto
+    .createHash("sha256")
+    .update(`${code}:${process.env.JWT_SECRET}`)
+    .digest("hex");
+
+const sendVerificationEmail = async (email, code) => {
   try {
     await sendEmail({
       email,
       subject: "Verify your WasteZero account",
-      message: `Please verify your email by clicking this link: ${verificationLink}`,
+      message: `Your WasteZero verification code is ${code}. It expires in ${EMAIL_VERIFICATION_CODE_TTL_MINUTES} minutes.`,
       html: `
         <h1>Verify your WasteZero account</h1>
-        <p>Please click the button below to verify your email address:</p>
-        <a href="${verificationLink}" style="display:inline-block; background-color:#16a34a; color:white; padding:12px 24px; text-decoration:none; border-radius:8px; font-weight:bold;">Verify Email</a>
-        <p>Or copy and paste this link: <br> ${verificationLink}</p>
+        <p>Use this verification code to verify your email address:</p>
+        <p style="font-size:24px; font-weight:bold; letter-spacing:4px;">${code}</p>
+        <p>This code expires in ${EMAIL_VERIFICATION_CODE_TTL_MINUTES} minutes.</p>
       `,
     });
   } catch (emailError) {
@@ -65,30 +74,68 @@ export const registerUser = async (req, res) => {
 
 export const verifyEmail = async (req, res) => {
   try {
-    const { token } = req.query;
-    if (!token) {
-      return res.status(400).json({ message: "Verification token is required" });
+    const { code } = req.body;
+    if (!code) {
+      return res.status(400).json({ message: "Verification code is required" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({
-      email: decoded.email,
-      verificationToken: token,
-    });
-
-    if (!user) {
+    if (!EMAIL_VERIFICATION_CODE_REGEX.test(String(code).trim())) {
       return res
         .status(400)
-        .json({ message: "Invalid or expired verification token" });
+        .json({ message: "Verification code must be a 6-digit number" });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.emailVerified) {
+      return res.status(200).json({ message: "Email already verified." });
+    }
+
+    if (!user.emailVerificationCodeHash || !user.emailVerificationCodeExpiresAt) {
+      return res.status(400).json({
+        message: "No active verification code. Please request a new code.",
+      });
+    }
+
+    if (new Date(user.emailVerificationCodeExpiresAt).getTime() < Date.now()) {
+      user.emailVerificationCodeHash = undefined;
+      user.emailVerificationCodeExpiresAt = undefined;
+      user.updatedAt = Date.now();
+      await user.save();
+      return res
+        .status(400)
+        .json({ message: "Verification code expired. Please request a new code." });
+    }
+
+    const receivedCodeHash = hashEmailVerificationCode(String(code).trim());
+    const storedCodeHash = String(user.emailVerificationCodeHash);
+
+    if (storedCodeHash.length !== receivedCodeHash.length) {
+      return res.status(400).json({ message: "Invalid verification code." });
+    }
+
+    const isCodeValid = crypto.timingSafeEqual(
+      Buffer.from(receivedCodeHash),
+      Buffer.from(storedCodeHash),
+    );
+
+    if (!isCodeValid) {
+      return res.status(400).json({ message: "Invalid verification code." });
     }
 
     user.emailVerified = true;
-    user.verificationToken = undefined;
+    user.emailVerificationCodeHash = undefined;
+    user.emailVerificationCodeExpiresAt = undefined;
+    user.updatedAt = Date.now();
     await user.save();
+    console.log(`Email verified for user: ${user.email}`);
 
     return res.status(200).json({ message: "Email verified successfully" });
   } catch (error) {
-    return res.status(400).json({ message: "Invalid or expired token", error });
+    return res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -103,22 +150,19 @@ export const requestEmailVerification = async (req, res) => {
       return res.status(400).json({ message: "Email already verified." });
     }
 
-    const verificationToken = jwt.sign(
-      { email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" },
+    const verificationCode = generateEmailVerificationCode();
+    user.emailVerificationCodeHash = hashEmailVerificationCode(verificationCode);
+    user.emailVerificationCodeExpiresAt = new Date(
+      Date.now() + EMAIL_VERIFICATION_CODE_TTL_MINUTES * 60 * 1000,
     );
-
-    user.verificationToken = verificationToken;
     user.updatedAt = Date.now();
     await user.save();
 
-    const verificationLink = buildVerificationLink(verificationToken);
-    await sendVerificationEmail(user.email, verificationLink);
+    await sendVerificationEmail(user.email, verificationCode);
 
     return res.status(200).json({
-      message: "Verification started. Please complete verification.",
-      verificationLink,
+      message: "Verification code sent to your email.",
+      expiresInMinutes: EMAIL_VERIFICATION_CODE_TTL_MINUTES,
     });
   } catch (error) {
     return res.status(500).json({ message: "Server error", error });
