@@ -9,7 +9,8 @@ const userSchema = new mongoose.Schema({
     location: String,
     bio: String,
     emailVerified: { type: Boolean, default: false },
-    verificationToken: String,
+    emailVerificationCodeHash: String,
+    emailVerificationCodeExpiresAt: Date,
     createdAt: { type: Date, default: Date.now },
 
     updatedAt: { type: Date, default: Date.now }

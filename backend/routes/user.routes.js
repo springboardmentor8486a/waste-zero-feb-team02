@@ -17,13 +17,13 @@ import express from "express";
 const router = express.Router();
 
 router.post("/register", registerUser);
-router.get("/verify-email", verifyEmail);
 router.post("/login", loginUser);
 
 router.get("/me", authenticateToken, getUserProfile);
 router.put("/me", authenticateToken, updateUserProfile);
 router.put("/me/password", authenticateToken, changeUserPassword);
 router.post("/me/verify-email", authenticateToken, requestEmailVerification);
+router.post("/me/verify-email/confirm", authenticateToken, verifyEmail);
 
 
 

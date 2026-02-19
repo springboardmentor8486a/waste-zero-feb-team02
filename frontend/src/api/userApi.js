@@ -20,4 +20,9 @@ export const userApi = {
     const response = await apiClient.post("/me/verify-email");
     return response.data;
   },
+
+  async verifyEmailCode(code) {
+    const response = await apiClient.post("/me/verify-email/confirm", { code });
+    return response.data;
+  },
 };
