@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
 import ThemeControl from "../components/theme/ThemeControl";
 
@@ -15,7 +15,6 @@ const initialFormState = {
 };
 
 const SignupPage = () => {
-  const navigate = useNavigate();
   const signup = useAppStore((state) => state.signup);
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
   const authLoading = useAppStore((state) => state.authLoading);
@@ -67,16 +66,11 @@ const SignupPage = () => {
     const result = await signup(payload);
     if (!result.success) return;
 
-    const registrationMessage =
+    setSuccessMessage(
       result.data?.message ??
-      "Registration successful. You can verify email after login.";
-
-    setSuccessMessage(registrationMessage);
+        "Registration successful. You can verify email after login.",
+    );
     setFormState(initialFormState);
-    navigate("/login", {
-      replace: true,
-      state: { signupSuccessMessage: registrationMessage },
-    });
   };
 
   return (
