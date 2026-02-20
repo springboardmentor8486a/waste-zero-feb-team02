@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
 import AuthLayout from "./Auth/AuthLayout";
 
@@ -15,7 +15,6 @@ const initialFormState = {
 };
 
 const SignupPage = () => {
-  const navigate = useNavigate();
   const signup = useAppStore((state) => state.signup);
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
   const authLoading = useAppStore((state) => state.authLoading);
