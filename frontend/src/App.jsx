@@ -48,14 +48,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route
-          path="/verify-email"
-          element={
-            <ProtectedRoute>
-              <VerifyEmail />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         <Route
           path="/login"

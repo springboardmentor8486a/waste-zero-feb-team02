@@ -18,7 +18,6 @@ const LoginPage = () => {
     email: "",
     password: "",
   });
-  const signupSuccessMessage = location.state?.signupSuccessMessage;
 
   const redirectPath = useMemo(() => {
     if (currentUser?.role === "NGO") return "/dashboard/ngo";
@@ -69,12 +68,6 @@ const LoginPage = () => {
         <p className="mb-6 text-sm text-emerald-900/70 dark:text-emerald-100/70">
           Login to continue your WasteZero journey.
         </p>
-
-        {signupSuccessMessage && (
-          <p className="mb-4 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-            {signupSuccessMessage}
-          </p>
-        )}
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <label className="block">

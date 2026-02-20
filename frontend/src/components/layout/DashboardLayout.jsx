@@ -45,14 +45,20 @@ const DashboardLayout = ({ children }) => {
 
     try {
       const data = await userApi.requestEmailVerification();
-      const message = data?.message ?? "Verification code sent to your email.";
-      setVerificationNotice(message);
-      navigate("/verify-email", {
-        state: { verificationNotice: message },
-      });
+      const verificationLink = data?.verificationLink;
+
+      if (verificationLink) {
+        window.location.assign(verificationLink);
+        return;
+      }
+
+      setVerificationNotice(
+        data?.message ??
+          "Verification started. Please check your email for the link.",
+      );
     } catch (error) {
       setVerificationNotice(
-        getApiErrorMessage(error, "Unable to send verification code."),
+        getApiErrorMessage(error, "Unable to start email verification."),
       );
     } finally {
       setVerificationLoading(false);
