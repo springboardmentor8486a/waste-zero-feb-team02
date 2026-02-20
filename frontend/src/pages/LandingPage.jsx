@@ -1,250 +1,78 @@
-import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
+import Header from "../components/layout/Header";
+import Navbar from "../components/layout/Navbar";
 import { Link } from "react-router-dom";
-import heroImage from "../assets/hero.png";
-import aboutImage from "../assets/about.png";
-import howImage from "../assets/how.png";
+
+const impactList = [
+  "Schedule waste pickups with verified organizations",
+  "Join local clean-up drives in your city",
+  "Track your environmental impact dashboard",
+];
 
 const LandingPage = () => {
   return (
-    <div
-      className="
-    scroll-smooth
-    min-h-screen
-    bg-gradient-to-r
-    from-green-100 via-green-200 to-green-300
-    text-gray-800
-    dark:from-[#0F2E1C]
-    dark:via-[#123524]
-    dark:to-[#0B3D2E]
-    dark:text-gray-200
-  "
-    >
-      {" "}
+    <div className="min-h-screen bg-linear-to-b from-emerald-50 via-teal-50 to-emerald-100 dark:from-emerald-950 dark:via-emerald-900 dark:to-slate-950">
       <Navbar />
-      {/* HERO SECTION */}
-      <section id="home" className="px-6 pt-16 pb-12 lg:px-20">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2">
-          {/* LEFT CONTENT */}
+      <Header />
+
+      <section id="about" className="px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
-            <h1 className="text-5xl md:text-6xl font-extrabold leading-tight text-[#14532D] dark:text-emerald-200">
-              Together We Build
-              <br />
-              <span className="text-[#16A34A]">a Cleaner</span>
-              <br />
-              <span className="text-[#10B981]">Tomorrow</span>
-            </h1>
-
-            <p className="mt-6 text-lg text-gray-600 dark:text-gray-300 max-w-lg">
-              Join thousands of volunteers reducing waste and creating real
-              environmental impact.
-            </p>
-
-            {/* BUTTONS */}
-            <div className="mt-8 flex flex-wrap gap-4">
-              {/* Signup Button */}
-              <Link
-                to="/signup"
-                className="rounded-full bg-[#16A34A] px-8 py-3 font-semibold text-white shadow-lg transition hover:scale-105 hover:bg-[#15803D]"
-              >
-                Get Started
-              </Link>
-
-              {/* Login Button */}
-              <Link
-                to="/login"
-                className="rounded-full border-2 border-[#16A34A] px-8 py-3 font-semibold text-[#16A34A] transition hover:bg-[#16A34A] hover:text-white"
-              >
-                Login
-              </Link>
-            </div>
-
-            {/* STATS */}
-            <div className="mt-12 flex gap-10 text-[#14532D] dark:text-emerald-200 font-semibold">
-              <div>
-                <p className="text-2xl">10K+</p>
-                <p className="text-sm text-gray-600">Volunteers</p>
-              </div>
-              <div>
-                <p className="text-2xl">500+</p>
-                <p className="text-sm text-gray-600">Clean-up Drives</p>
-              </div>
-              <div>
-                <p className="text-2xl">20+</p>
-                <p className="text-sm text-gray-600">Partner NGOs</p>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT IMAGE */}
-          <div className="flex justify-center">
-            <img
-              src={heroImage}
-              alt="WasteZero"
-              className="w-full h-auto object-contain"
-            />
-          </div>
-        </div>
-      </section>
-      {/*ABOUT SECTION*/}
-      <section
-        id="about"
-        className="relative pt-8 pb-24 bg-gradient-to-b from-[#FBFFE4] to-white dark:from-[#0F2E1C] dark:to-[#123524] px-6 lg:px-20 overflow-hidden"
-      >
-        {/* Soft background glow */}
-        <div className="absolute right-0 top-10 w-[400px] h-[400px] bg-[#B3D8A8]/30 rounded-full blur-3xl"></div>
-
-        <div className="relative mx-auto max-w-7xl grid lg:grid-cols-2 gap-20 items-center">
-          {/* LEFT CONTENT */}
-          <div>
-            <h2 className="text-4xl md:text-5xl font-bold text-[#3D8D7A] leading-tight">
-              What is <span className="text-[#2F6F60]">WasteZero?</span>
+            <h2 className="text-4xl font-extrabold text-emerald-900 dark:text-emerald-100">
+              What is WasteZero?
             </h2>
-
-            <p className="mt-8 text-lg text-gray-600 leading-relaxed max-w-xl">
-              WasteZero is a community-driven sustainability platform that
-              connects volunteers, NGOs, and administrators to reduce
-              environmental waste through real-world action.
+            <p className="mt-4 text-base leading-relaxed text-emerald-900/75 dark:text-emerald-100/75">
+              WasteZero is a community-driven platform connecting volunteers,
+              NGOs, and administrators to promote sustainability and reduce
+              environmental waste through real actions.
             </p>
 
-            <div className="mt-10 space-y-5">
-              {[
-                "Schedule waste pickups easily",
-                "Join local clean-up drives",
-                "Track your environmental impact",
-              ].map((item) => (
-                <div
+            <ul className="mt-6 space-y-3">
+              {impactList.map((item) => (
+                <li
                   key={item}
-                  className="flex items-center gap-4 bg-white dark:bg-[#1B4332] px-6 py-4 rounded-2xl shadow-md hover:shadow-xl transition duration-300"
+                  className="rounded-2xl border border-emerald-200/80 bg-white/80 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/55 dark:text-emerald-100"
                 >
-                  <div className="w-8 h-8 flex items-center justify-center bg-[#B3D8A8] rounded-full text-[#3D8D7A] font-bold">
-                    ✓
-                  </div>
-                  <span className="font-medium text-gray-700 dark:text-gray-200">
-                    {item}
-                  </span>
-                </div>
+                  {item}
+                </li>
               ))}
+            </ul>
+          </div>
+
+          <div className="rounded-3xl bg-linear-to-br from-emerald-700 via-emerald-600 to-teal-500 p-6 shadow-xl">
+            <div className="rounded-2xl bg-white/90 p-5 text-emerald-900">
+              <h3 className="text-lg font-bold">Smart Matching</h3>
+              <p className="mt-2 text-sm">
+                Volunteers are matched with NGO opportunities using role, skills,
+                and location data.
+              </p>
             </div>
-          </div>
-
-          {/* RIGHT IMAGE */}
-          <div className="relative flex justify-center">
-            <div className="absolute w-[350px] h-[350px] bg-[#A3D1C6]/40 rounded-full blur-3xl"></div>
-
-            <img
-              src={aboutImage}
-              alt="WasteZero recycling"
-              className="w-[350px] md:w-[500px] lg:w-[600px] object-contain"
-            />
-          </div>
-        </div>
-      </section>
-      {/*HOW IT WORKS*/}
-      <section
-        id="how-it-works"
-        className="py-28 bg-[#FBFFE4] dark:bg-[#0F2E1C] px-6 lg:px-20 overflow-hidden"
-      >
-        <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-20 items-center">
-          {/* LEFT IMAGE */}
-          <div className="relative flex justify-center">
-            {/* Glow background */}
-            <div className="absolute w-[350px] h-[350px] bg-[#B3D8A8]/40 rounded-full blur-3xl"></div>
-
-            <img
-              src={howImage}
-              alt="How WasteZero Works"
-              className="max-w-xl"
-            />
-          </div>
-
-          {/* RIGHT CONTENT */}
-          <div>
-            <h2 className="text-4xl md:text-5xl font-bold text-[#3D8D7A]">
-              How WasteZero Works
-            </h2>
-
-            <p className="mt-6 text-lg text-gray-600 dark:text-gray-300">
-              Simple steps to create real environmental impact.
-            </p>
-
-            <div className="mt-12 space-y-10">
-              {/* STEP 1 */}
-              <div className="flex gap-6">
-                <div className="flex items-center justify-center w-14 h-14 bg-[#3D8D7A] text-white rounded-full font-bold text-lg shadow-lg">
-                  01
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-[#2F6F60]">
-                    Sign Up
-                  </h3>
-                  <p className="mt-2 text-gray-600 dark:text-gray-300">
-                    Create your account and join the sustainability movement.
-                  </p>
-                </div>
-              </div>
-
-              {/* STEP 2 */}
-              <div className="flex gap-6">
-                <div className="flex items-center justify-center w-14 h-14 bg-[#3D8D7A] text-white rounded-full font-bold text-lg shadow-lg">
-                  02
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-[#2F6F60]">
-                    Take Action
-                  </h3>
-                  <p className="mt-2 text-gray-600 dark:text-gray-300">
-                    Participate in clean-up drives or schedule pickups.
-                  </p>
-                </div>
-              </div>
-
-              {/* STEP 3 */}
-              <div className="flex gap-6">
-                <div className="flex items-center justify-center w-14 h-14 bg-[#3D8D7A] text-white rounded-full font-bold text-lg shadow-lg">
-                  03
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-[#2F6F60]">
-                    Track Impact
-                  </h3>
-                  <p className="mt-2 text-gray-600 dark:text-gray-300">
-                    Monitor your contribution and real-world results.
-                  </p>
-                </div>
-              </div>
+            <div className="mt-4 rounded-2xl bg-white/90 p-5 text-emerald-900">
+              <h3 className="text-lg font-bold">Impact Tracking</h3>
+              <p className="mt-2 text-sm">
+                Every contribution is tracked so teams can see results and
+                improve.
+              </p>
             </div>
           </div>
         </div>
       </section>
-      {/*CTA*/}
-      <section className="bg-[#3D8D7A] dark:bg-[#123524] py-20 px-6 lg:px-20">
-        <div className="max-w-4xl mx-auto text-center text-white">
-          <h2 className="text-3xl md:text-4xl font-bold">
-            Ready to Make a Difference?
-          </h2>
 
-          <p className="mt-4 text-lg text-[#E6F4EA]">
-            Be part of a growing community working toward a cleaner planet.
+      <section id="how-it-works" className="px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl rounded-4xl bg-linear-to-r from-emerald-800 to-emerald-600 px-8 py-14 text-center text-white shadow-xl">
+          <h2 className="text-4xl font-extrabold">Ready to Make a Difference?</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base text-emerald-100">
+            Join the movement and help create a sustainable future.
           </p>
-
-          <div className="mt-8 flex justify-center gap-4 flex-wrap">
-            <Link
-              to="/signup"
-              className="bg-white text-[#3D8D7A] px-8 py-3 rounded-full font-semibold shadow-md hover:scale-105 transition"
-            >
-              Join the Movement
-            </Link>
-
-            <Link
-              to="/login"
-              className="border-2 border-white px-8 py-3 rounded-full font-semibold hover:bg-white hover:text-[#3D8D7A] transition"
-            >
-              Sign In
-            </Link>
-          </div>
+          <Link
+            to="/signup"
+            className="mt-7 inline-flex rounded-full bg-white px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-0.5"
+          >
+            Join WasteZero Today
+          </Link>
         </div>
       </section>
+
       <Footer />
     </div>
   );
