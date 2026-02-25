@@ -1,69 +1,64 @@
 # Waste Zero Backend
 
-Backend API for Waste Zero user authentication and profile management.
-
-## What This Service Does
-- Registers users (`volunteer` or `NGO`)
-- Sends email verification links on signup
-- Verifies user emails from tokenized links
-- Logs users in with JWT access + refresh tokens
-- Blocks login for unverified emails and returns a fresh verification link
-- Returns authenticated user profile
-- Updates authenticated user profile
-- Changes authenticated user password
+Backend API for Waste Zero. This service currently provides:
+- User authentication and profile management
+- Email verification flow
+- Opportunity CRUD with NGO role + ownership enforcement
 
 ## Tech Stack
 - Node.js (ES modules)
 - Express 5
 - MongoDB + Mongoose
 - JWT (`jsonwebtoken`)
-- Password hashing (`bcrypt`)
-- Environment config (`dotenv`)
+- `bcrypt` for password hashing
+- `nodemailer` for verification emails
 
-## Project Structure
+## Current Project Structure
 ```text
 backend/
 |- controllers/
-|  `- user.controller.js
+|  |- user.controller.js
+|  `- opportunity.controller.js
 |- dbconfig/
 |  `- config.js
 |- middleware/
-|  `- user.middleware.js
+|  |- user.middleware.js
+|  `- error.middleware.js
 |- models/
-|  `- User.js
+|  |- User.js
+|  `- Opportunity.js
 |- routes/
-|  `- user.routes.js
+|  |- user.routes.js
+|  `- opportunity.routes.js
+|- utils/
+|  |- email.js
+|  `- AppError.js
 |- .env.example
 |- .env.samples
-|- .gitignore
 |- package.json
 `- server.js
 ```
 
 ## Prerequisites
-- Node.js 18+ (recommended)
+- Node.js 18+
 - npm
-- MongoDB connection string (Atlas or local)
+- MongoDB connection string
 
-## Quick Start
+## Setup and Run
 ```bash
-# 1) Install dependencies
 npm install
-
-# 2) Create local env file
 cp .env.example .env
-
-# 3) Fill env values in .env
-
-# 4) Start server
 npm run dev
 ```
 
-Server starts at `http://localhost:3000`.
+PowerShell:
+```powershell
+Copy-Item .env.example .env
+npm install
+npm run dev
+```
 
-Note: `.env.samples` is also provided and kept consistent with `.env.example`.
-
-`server.js` uses `PORT` from `.env` and falls back to `3000` if not set.
+Server default URL: `http://localhost:3000`
 
 ## Environment Variables
 Use `.env.example` as template.
@@ -89,94 +84,101 @@ EMAIL_USER=your_email@example.com
 EMAIL_PASS=your_email_app_password
 ```
 
-### Variable Details
-- `MONGO_URI` (required): MongoDB connection URI used by `dbconfig/config.js`
-- `JWT_SECRET` (required): secret for access token signing and verification
-- `JWT_REFRESH_SECRET` (required): secret for refresh token signing and verification
-- `ACCESS_TOKEN_EXPIRY` (optional): access token lifetime (default fallback: `1h`)
-- `REFRESH_TOKEN_EXPIRY` (optional): refresh token lifetime (default fallback: `7d`)
-- `PORT` (optional): server port (default fallback: `3000`)
-- `FRONTEND_URL` (optional): used to build verification links (default fallback: `http://localhost:5173`)
-- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`: SMTP settings used by `utils/email.js`
+## API Basics
+- Base URL: `http://localhost:3000/api/v1`
+- Auth header format: `Authorization: Bearer <accessToken>`
+- Common error response:
+```json
+{ "message": "Error text here" }
+```
 
-## API Guide
-Base URL: `http://localhost:3000/api/v1`
+### Authorization Rules
+- Only `NGO` users can `create/update/delete` opportunities.
+- Only the owner NGO (`ngo_id`) can update or delete its opportunity.
+- Volunteers have read-only access for opportunities.
+
+### Status Code Rules
+- `401`: unauthorized (missing/invalid token)
+- `403`: forbidden (role/ownership violation)
+- `400`: invalid request/invalid ID/input validation failure
+- `404`: resource not found
+
+## Endpoints Summary
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/register` | No | Register user (volunteer or NGO) |
+| POST | `/login` | No | Login and receive access/refresh tokens |
+| POST | `/refresh-token` | No | Get new access token from refresh token |
+| GET | `/verify-email?token=...` | No | Verify email with token |
+| GET | `/me` | Yes | Get current user profile |
+| PUT | `/me` | Yes | Update current user profile |
+| PUT | `/me/password` | Yes | Change password |
+| POST | `/me/verify-email` | Yes | Generate and send verification link |
+| POST | `/opportunities` | Yes (NGO only) | Create opportunity |
+| GET | `/opportunities` | No | List opportunities (supports filters) |
+| GET | `/opportunities/:id` | No | Get one opportunity |
+| PUT | `/opportunities/:id` | Yes (NGO owner only) | Update opportunity |
+| DELETE | `/opportunities/:id` | Yes (NGO owner only) | Delete opportunity |
+
+## Detailed Endpoint Usage
 
 ### 1) Register
-- Method: `POST`
-- Path: `/register`
-- Body:
+- `POST /register`
 ```json
 {
-  "name": "Alex",
-  "email": "alex@example.com",
+  "name": "Green NGO",
+  "email": "ngo@example.com",
   "password": "StrongPassword123",
-  "role": "volunteer",
-  "skills": ["sorting", "logistics"],
+  "role": "NGO",
+  "skills": ["awareness", "logistics"],
   "location": "Delhi",
-  "bio": "Community volunteer"
+  "bio": "Community NGO"
 }
 ```
 
 ### 2) Login
-- Method: `POST`
-- Path: `/login`
-- Body:
+- `POST /login`
 ```json
 {
-  "email": "alex@example.com",
+  "email": "ngo@example.com",
   "password": "StrongPassword123"
 }
 ```
-- Success response returns:
+- Success includes:
   - `accessToken`
   - `refreshToken`
-  - basic user payload
-- If email is not verified, returns `403` and includes:
-  - `message`
-  - `verificationLink`
+  - `user` object
 
-### 3) Verify Email
-- Method: `GET`
-- Path: `/verify-email`
-- Query:
-```text
-token=<verification_token>
-```
-
-### 4) Get Current User
-- Method: `GET`
-- Path: `/me`
-- Auth header:
-```http
-Authorization: Bearer <accessToken>
-```
-
-### 5) Update Current User
-- Method: `PUT`
-- Path: `/me`
-- Auth header:
-```http
-Authorization: Bearer <accessToken>
-```
-- Body supports any of:
+### 3) Refresh Access Token
+- `POST /refresh-token`
 ```json
 {
-  "name": "Alex Updated",
-  "skills": ["sorting", "awareness"],
+  "refreshToken": "<refreshToken>"
+}
+```
+
+### 4) Start Email Verification
+- `POST /me/verify-email` (auth required)
+- Sends email and returns verification link in response.
+
+### 5) Verify Email
+- `GET /verify-email?token=<token>`
+
+### 6) Get/Update Profile
+- `GET /me`
+- `PUT /me`
+```json
+{
+  "name": "Updated Name",
+  "skills": ["awareness", "field-work"],
   "location": "Mumbai",
   "bio": "Updated bio"
 }
 ```
 
-### 6) Change Password
-- Method: `PUT`
-- Path: `/me/password`
-- Auth header:
-```http
-Authorization: Bearer <accessToken>
-```
-- Body:
+### 7) Change Password
+- `PUT /me/password`
 ```json
 {
   "currentPassword": "StrongPassword123",
@@ -184,165 +186,120 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-### 7) Refresh Access Token
-- Method: `POST`
-- Path: `/refresh-token`
-- Body:
+### 8) Create Opportunity (NGO only)
+- `POST /opportunities`
 ```json
 {
-  "refreshToken": "<refreshToken>"
+  "title": "Weekend Food Rescue Drive",
+  "description": "Collect and redistribute excess food",
+  "required_skills": ["coordination", "communication"],
+  "duration": "6 weeks",
+  "location": "Delhi",
+  "status": "open"
 }
 ```
+- `ngo_id` is always extracted from JWT and cannot be supplied by client.
 
-## cURL Usage Examples
+### 9) Get All Opportunities
+- `GET /opportunities`
+- Optional query params:
+  - `location` (case-insensitive match)
+  - `skills` (comma-separated or repeated values in query)
+  - `status` (`open`, `closed`, `in-progress`)
+
+Examples:
+- `/opportunities?location=delhi`
+- `/opportunities?skills=communication,coordination`
+- `/opportunities?status=open`
+- `/opportunities?location=delhi&skills=logistics&status=open`
+
+### 10) Get Single Opportunity
+- `GET /opportunities/:id`
+
+### 11) Update Opportunity (NGO owner only)
+- `PUT /opportunities/:id`
+- Allowed fields only:
+  - `title`, `description`, `required_skills`, `duration`, `location`, `status`
+- `ngo_id` modification is blocked.
+
+### 12) Delete Opportunity (NGO owner only)
+- `DELETE /opportunities/:id`
+
+## Postman API Testing Guide
+
+### 1) Create environment variables
+In Postman environment, create:
+- `base_url` = `http://localhost:3000/api/v1`
+- `access_token` = (empty initially)
+- `refresh_token` = (empty initially)
+- `opportunity_id` = (empty initially)
+- `verification_token` = (optional, empty initially)
+
+### 2) Create request collection
+Recommended folders:
+- `Auth`
+- `User`
+- `Opportunities`
+
+Use request URL format: `{{base_url}}/...`
+
+### 3) Token capture tests in Login request
+In the `POST /login` request, add this to Tests tab:
+```javascript
+const json = pm.response.json();
+if (json.accessToken) pm.environment.set("access_token", json.accessToken);
+if (json.refreshToken) pm.environment.set("refresh_token", json.refreshToken);
+```
+
+For authenticated requests, set Authorization type to `Bearer Token` and value:
+`{{access_token}}`
+
+### 4) Opportunity ID capture tests
+In `POST /opportunities` Tests tab:
+```javascript
+const json = pm.response.json();
+if (json._id) pm.environment.set("opportunity_id", json._id);
+```
+
+### 5) Recommended manual test sequence
+1. Register NGO user (`POST /register`)
+2. Login NGO (`POST /login`) and store tokens
+3. Create opportunity (`POST /opportunities`)
+4. List opportunities (`GET /opportunities`)
+5. Get by ID (`GET /opportunities/{{opportunity_id}}`)
+6. Update same opportunity (`PUT /opportunities/{{opportunity_id}}`)
+7. Delete same opportunity (`DELETE /opportunities/{{opportunity_id}}`)
+8. Register + login volunteer and verify:
+   - `GET /opportunities` works
+   - `POST/PUT/DELETE /opportunities` returns `403`
+
+### 6) Quick negative tests
+- Invalid ID test: `GET /opportunities/123` should return `400`.
+- Missing token on NGO-only route should return `401`.
+- Non-owner NGO update/delete should return `403`.
+- Deleted or missing record should return `404`.
+
+## cURL Quick Examples
 ```bash
-# Register
-curl -X POST http://localhost:3000/api/v1/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Alex","email":"alex@example.com","password":"StrongPassword123","role":"volunteer"}'
-
 # Login
 curl -X POST http://localhost:3000/api/v1/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"alex@example.com","password":"StrongPassword123"}'
+  -d '{"email":"ngo@example.com","password":"StrongPassword123"}'
 
-# Verify email
-curl -X GET "http://localhost:3000/api/v1/verify-email?token=<token>"
-
-# Get profile
-curl -X GET http://localhost:3000/api/v1/me \
-  -H "Authorization: Bearer <accessToken>"
-
-# Change password
-curl -X PUT http://localhost:3000/api/v1/me/password \
-  -H "Authorization: Bearer <accessToken>" \
+# Create opportunity
+curl -X POST http://localhost:3000/api/v1/opportunities \
   -H "Content-Type: application/json" \
-  -d '{"currentPassword":"StrongPassword123","newPassword":"NewStrongPassword456"}'
+  -H "Authorization: Bearer <accessToken>" \
+  -d '{"title":"Drive","description":"Desc","required_skills":["communication"],"duration":"2 weeks","location":"Delhi","status":"open"}'
+
+# Filter opportunities
+curl "http://localhost:3000/api/v1/opportunities?location=delhi&status=open"
 ```
 
-## `.gitignore` Instructions
-Current `.gitignore`:
-```gitignore
-node_modules
-.env
-```
-
-Team rules:
-- Keep `.env` ignored at all times
-- Never commit secrets or tokens
-- Commit `.env.example` / `.env.samples` with placeholder values only
-- Keep `node_modules` ignored
-- If new generated files appear (logs/build artifacts), add them to `.gitignore`
-
-Recommended additions for this backend:
-```gitignore
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-.DS_Store
-coverage
-dist
-```
-
-## Team Collaboration Guide
-
-### Branching Strategy
-Use short-lived feature branches from `main`.
-
-Branch naming:
-- `feat/<ticket-or-topic>`
-- `fix/<ticket-or-topic>`
-- `chore/<topic>`
-
-Example:
-```bash
-git checkout main
-git pull origin main
-git checkout -b feat/auth-refresh-token
-```
-
-### Daily Workflow (Commands)
-```bash
-# Get latest
-git checkout main
-git pull origin main
-
-# Start work
-git checkout -b feat/<topic>
-
-# While coding
-npm install
-npm run dev
-
-# Before commit
-git status
-git add <files>
-git commit -m "feat(auth): add refresh token endpoint"
-
-# Sync with main before PR
-git fetch origin
-git rebase origin/main
-
-# Push branch
-git push -u origin feat/<topic>
-```
-
-### Pull Request Checklist
-- Scope is focused (single concern)
-- No secrets in diff
-- `.env` not tracked
-- API behavior tested manually (or automated tests when added)
-- Clear PR title and description
-- Reviewer can run using README steps
-
-### Commit Message Convention
-Use Conventional Commits style:
-- `feat:` new functionality
-- `fix:` bug fix
-- `refactor:` code restructuring without behavior change
-- `chore:` maintenance/config changes
-- `docs:` documentation
-
-Examples:
-- `feat(auth): add profile update endpoint`
-- `fix(middleware): return 401 for missing token`
-- `docs(readme): add setup and collaboration guide`
-
-### Do and Don't
-
-Do:
-- Pull/rebase regularly to reduce conflicts
-- Keep PRs small and reviewable
-- Use environment variables for config and secrets
-- Validate API changes with local requests
-- Update docs when endpoints/env requirements change
-
-Don't:
-- Do not commit `.env`, credentials, or real tokens
-- Do not push directly to `main`
-- Do not mix unrelated changes in one PR
-- Do not force push shared branches without team agreement
-- Do not rename API contracts without notifying frontend team
-
-## Troubleshooting
-
-### MongoDB connection fails
-- Verify `MONGO_URI` format and credentials
-- Ensure IP/network access is allowed in MongoDB provider
-- Check server logs for `Database connection failed`
-
-### Invalid token / unauthorized
-- Ensure `Authorization` header uses `Bearer <token>`
-- Check that `JWT_SECRET` and `JWT_REFRESH_SECRET` are set correctly
-- Re-login to generate fresh tokens
-
-### Port already in use
-- Stop the process using your current app port
-- Or set a different `PORT` value in `.env`
-
-## Current Gaps (Known)
-- No automated tests yet (`npm test` is placeholder)
+## Known Gaps
+- No automated tests yet (`npm test` is placeholder).
+- Opportunity-application cascade logic is not implemented yet (planned later milestone).
 
 ## License
-ISC (from `package.json`)
+ISC
+

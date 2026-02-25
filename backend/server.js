@@ -2,7 +2,9 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import userRoutes from "./routes/user.routes.js";
+import opportunityRoutes from "./routes/opportunity.routes.js";
 import connectDB from "./dbconfig/config.js";
+import { errorHandler, notFound } from "./middleware/error.middleware.js";
 
 dotenv.config();
 
@@ -36,6 +38,10 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1", userRoutes);
+app.use("/api/v1/opportunities", opportunityRoutes);
+
+app.use(notFound);
+app.use(errorHandler);
 
 connectDB();
 
