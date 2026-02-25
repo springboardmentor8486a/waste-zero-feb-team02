@@ -51,14 +51,7 @@ const SignupPage = () => {
       skills: formState.skills.split(",").map((s) => s.trim()),
     };
 
-    const result = await signup(payload);
-    if (!result.success) return;
-
-    setSuccessMessage(
-      result.data?.message ??
-        "Registration successful. You can verify email after login.",
-    );
-    setFormState(initialFormState);
+    await signup(payload);
   };
 
   return (

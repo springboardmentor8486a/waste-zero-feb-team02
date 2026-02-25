@@ -19,13 +19,16 @@
     min-height: 100%;
     width: 100%;
   }
+  html {
+    scroll-behavior: smooth;
+  }
 
   body {
     @apply m-0 bg-emerald-50 text-slate-900 antialiased transition-colors duration-300;
   }
 
   html.dark body,
-  html[data-theme='dark'] body {
+  html[data-theme="dark"] body {
     @apply bg-emerald-950 text-slate-100;
   }
 
