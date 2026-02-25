@@ -11,7 +11,7 @@ const LandingPage = () => {
       className="
     scroll-smooth
     min-h-screen
-    bg-gradient-to-r
+    bg-linear-to-r
     from-green-100 via-green-200 to-green-300
     text-gray-800
     dark:from-[#0F2E1C]
@@ -89,10 +89,10 @@ const LandingPage = () => {
       {/*ABOUT SECTION*/}
       <section
         id="about"
-        className="relative pt-8 pb-24 bg-gradient-to-b from-[#FBFFE4] to-white dark:from-[#0F2E1C] dark:to-[#123524] px-6 lg:px-20 overflow-hidden"
+        className="relative pt-8 pb-24 bg-linear-to-b from-[#FBFFE4] to-white dark:from-[#0F2E1C] dark:to-[#123524] px-6 lg:px-20 overflow-hidden"
       >
         {/* Soft background glow */}
-        <div className="absolute right-0 top-10 w-[400px] h-[400px] bg-[#B3D8A8]/30 rounded-full blur-3xl"></div>
+        <div className="absolute right-0 top-10 w-100 h-100 bg-[#B3D8A8]/30 rounded-full blur-3xl"></div>
 
         <div className="relative mx-auto max-w-7xl grid lg:grid-cols-2 gap-20 items-center">
           {/* LEFT CONTENT */}
@@ -130,12 +130,12 @@ const LandingPage = () => {
 
           {/* RIGHT IMAGE */}
           <div className="relative flex justify-center">
-            <div className="absolute w-[350px] h-[350px] bg-[#A3D1C6]/40 rounded-full blur-3xl"></div>
+            <div className="absolute w-87.5 h-87.5 bg-[#A3D1C6]/40 rounded-full blur-3xl"></div>
 
             <img
               src={aboutImage}
               alt="WasteZero recycling"
-              className="w-[350px] md:w-[500px] lg:w-[600px] object-contain"
+              className="w-87.5 md:w-125 lg:w-150 object-contain"
             />
           </div>
         </div>
@@ -149,7 +149,7 @@ const LandingPage = () => {
           {/* LEFT IMAGE */}
           <div className="relative flex justify-center">
             {/* Glow background */}
-            <div className="absolute w-[350px] h-[350px] bg-[#B3D8A8]/40 rounded-full blur-3xl"></div>
+            <div className="absolute w-87.5 h-87.5 bg-[#B3D8A8]/40 rounded-full blur-3xl"></div>
 
             <img
               src={howImage}
