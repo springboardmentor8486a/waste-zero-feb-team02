@@ -1,30 +1,49 @@
-import express from "express";
+﻿import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import userRoutes from "./routes/user.routes.js";
-import mongoose from "mongoose";
+import opportunityRoutes from "./routes/opportunity.routes.js";
 import connectDB from "./dbconfig/config.js";
+import { errorHandler, notFound } from "./middleware/error.middleware.js";
 
-const app = express();
 dotenv.config();
 
-app.use(cors());
-
+const app = express();
 const PORT = process.env.PORT || 3000;
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+].filter(Boolean);
 
-connectDB();
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error("Not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
+app.use(express.json());
 
-
-app.use(express.json())
 app.get("/", (req, res) => {
   res.send("Hello World from Express server!");
 });
 
 app.use("/api/v1", userRoutes);
+app.use("/api/v1/opportunities", opportunityRoutes);
 
+app.use(notFound);
+app.use(errorHandler);
 
+connectDB();
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
