@@ -1,4 +1,7 @@
 export const createOpportunitySlice = (set) => ({
+  globalSearch: "",
+  setGlobalSearch: (value) => set({ globalSearch: value }),
+
   opportunities: [
     {
       id: "1",

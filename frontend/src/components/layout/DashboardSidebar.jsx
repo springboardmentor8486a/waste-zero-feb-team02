@@ -14,13 +14,39 @@ import {
 import { Link, NavLink } from "react-router-dom";
 import ThemeControl from "../theme/ThemeControl";
 
-const createPrimaryItems = (dashboardPath) => [
-  { label: "Dashboard", icon: LayoutDashboard, to: dashboardPath },
-  { label: "Schedule Pickup", icon: CalendarDays },
-  { label: "Opportunities", icon: BriefcaseBusiness },
-  { label: "Messages", icon: MessageCircle },
-  { label: "My Impact", icon: Gauge },
-];
+const createPrimaryItems = (dashboardPath, role) => {
+  if (role === "NGO") {
+    return [
+      { label: "Dashboard", icon: LayoutDashboard, to: dashboardPath },
+      {
+        label: "Schedule Pickup",
+        icon: CalendarDays,
+        to: "/dashboard/ngo/schedule",
+      },
+      {
+        label: "Opportunities",
+        icon: BriefcaseBusiness,
+        to: "/dashboard/ngo/opportunities",
+      },
+      { label: "Messages", icon: MessageCircle, to: "/dashboard/messages" },
+    ];
+  }
+
+  if (role === "volunteer") {
+    return [
+      { label: "Dashboard", icon: LayoutDashboard, to: dashboardPath },
+      {
+        label: "Opportunities",
+        icon: BriefcaseBusiness,
+        to: "/dashboard/volunteer",
+      },
+      { label: "Messages", icon: MessageCircle, to: "/dashboard/messages" },
+      { label: "My Impact", icon: Gauge, to: "/dashboard/volunteer/impact" },
+    ];
+  }
+
+  return [];
+};
 
 const settingsItems = [
   { label: "My Profile", icon: UserRound, to: "/profile" },
@@ -65,8 +91,7 @@ const SidebarItem = ({ item, onSelect }) => {
 };
 
 const DashboardSidebar = ({ user, dashboardPath, onLogout, onSelect }) => {
-  const primaryItems = createPrimaryItems(dashboardPath);
-
+  const primaryItems = createPrimaryItems(dashboardPath, user?.role);
   return (
     <aside className="flex h-full flex-col rounded-3xl border border-emerald-200/70 bg-white/85 p-4 backdrop-blur dark:border-emerald-900/40 dark:bg-emerald-950/65">
       <Link

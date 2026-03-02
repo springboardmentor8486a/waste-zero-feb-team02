@@ -9,6 +9,9 @@ import VerifyEmail from "./pages/VerifyEmail";
 import VolunteerDashboard from "./pages/VolunteerDashboard";
 import NGODashboard from "./pages/NGODashboard";
 import ProfilePage from "./pages/ProfilePage";
+import CreateOpportunity from "./pages/CreateOpportunity";
+import EditOpportunity from "./pages/EditOpportunity";
+import NGOOpportunities from "./pages/NGOOpportunities";
 import { useAppStore } from "./store/useAppStore";
 
 const getDashboardRoute = (user) =>
@@ -85,6 +88,39 @@ function App() {
             <ProtectedRoute allowedRoles={["NGO"]}>
               <DashboardLayout>
                 <NGODashboard />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/ngo/opportunities"
+          element={
+            <ProtectedRoute allowedRoles={["NGO"]}>
+              <DashboardLayout>
+                <NGOOpportunities />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/ngo/create"
+          element={
+            <ProtectedRoute allowedRoles={["NGO"]}>
+              <DashboardLayout>
+                <CreateOpportunity />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/ngo/edit/:id"
+          element={
+            <ProtectedRoute allowedRoles={["NGO"]}>
+              <DashboardLayout>
+                <EditOpportunity />
               </DashboardLayout>
             </ProtectedRoute>
           }
