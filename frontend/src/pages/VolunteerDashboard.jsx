@@ -1,9 +1,34 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
 import { ClipboardList, Mail, MapPin, ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
 
 const VolunteerDashboard = () => {
   const user = useAppStore((state) => state.currentUser);
+  const [loading, setLoading] = useState(true);
+  const [opportunities, setOpportunities] = useState([]);
+
+  useEffect(() => {
+    const fetchOpportunities = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:3000/api/v1/opportunities",
+        );
+
+        console.log("API RESPONSE:", res.data);
+
+        setOpportunities(res.data?.opportunities || []);
+      } catch (error) {
+        console.error("Fetch error:", error);
+        setOpportunities([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOpportunities();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -71,15 +96,58 @@ const VolunteerDashboard = () => {
         </section>
 
         <div className="space-y-6 xl:col-span-2">
-          <section className="rounded-3xl border border-dashed border-emerald-300 bg-white/85 p-6 text-center shadow-sm dark:border-emerald-800 dark:bg-emerald-950/60">
-            <h2 className="text-xl font-bold text-emerald-950 dark:text-emerald-50">
-              Available Opportunities
-            </h2>
-            <p className="mt-2 text-emerald-900/70 dark:text-emerald-100/70">
-              Browse and apply to volunteering opportunities .
-            </p>
-          </section>
+          <section className="rounded-3xl border border-emerald-200/70 bg-white/85 p-6 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/60">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-emerald-950 dark:text-emerald-50">
+                Opportunities Overview
+              </h2>
 
+              <Link
+                to="/dashboard/volunteer/opportunities"
+                className="text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-300"
+              >
+                View All →
+              </Link>
+            </div>
+
+            {loading ? (
+              <p className="mt-4 text-sm">Loading...</p>
+            ) : (
+              <div className="mt-5 grid gap-4">
+                <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                  Total Opportunities:{" "}
+                  <span className="font-semibold">{opportunities.length}</span>
+                </p>
+
+                {opportunities.slice(0, 2).map((opp) => (
+                  <div
+                    key={opp._id}
+                    className="group rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 dark:border-emerald-900/50 dark:bg-emerald-950/60"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-base font-semibold text-emerald-900 dark:text-emerald-100">
+                          {opp.title}
+                        </h3>
+
+                        <p className="mt-1 text-xs text-emerald-800/70 dark:text-emerald-200/70 line-clamp-2">
+                          {opp.description}
+                        </p>
+                      </div>
+
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-200">
+                        {opp.status || "Open"}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 text-xs text-emerald-700 dark:text-emerald-300">
+                      📍 {opp.location}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
           <section className="rounded-3xl border border-emerald-200/70 bg-white/85 p-6 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/60">
             <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-emerald-950 dark:text-emerald-50">
               <ClipboardList size={18} />

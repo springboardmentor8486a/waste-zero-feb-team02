@@ -12,6 +12,7 @@ import ProfilePage from "./pages/ProfilePage";
 import CreateOpportunity from "./pages/CreateOpportunity";
 import EditOpportunity from "./pages/EditOpportunity";
 import NGOOpportunities from "./pages/NGOOpportunities";
+import OpportunitiesPage from "./pages/OpportunitiesPage";
 import { useAppStore } from "./store/useAppStore";
 
 const getDashboardRoute = (user) =>
@@ -77,6 +78,17 @@ function App() {
             <ProtectedRoute allowedRoles={["volunteer"]}>
               <DashboardLayout>
                 <VolunteerDashboard />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/volunteer/opportunities"
+          element={
+            <ProtectedRoute allowedRoles={["volunteer"]}>
+              <DashboardLayout>
+                <OpportunitiesPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

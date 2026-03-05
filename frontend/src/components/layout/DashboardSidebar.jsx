@@ -38,7 +38,7 @@ const createPrimaryItems = (dashboardPath, role) => {
       {
         label: "Opportunities",
         icon: BriefcaseBusiness,
-        to: "/dashboard/volunteer",
+        to: "/dashboard/volunteer/opportunities",
       },
       { label: "Messages", icon: MessageCircle, to: "/dashboard/messages" },
       { label: "My Impact", icon: Gauge, to: "/dashboard/volunteer/impact" },
@@ -55,7 +55,7 @@ const settingsItems = [
   { label: "Admin Panel", icon: Shield },
 ];
 
-const SidebarItem = ({ item, onSelect }) => {
+const SidebarItem = ({ item, onSelect, dashboardPath }) => {
   const Icon = item.icon;
 
   if (!item.to) {
@@ -74,7 +74,7 @@ const SidebarItem = ({ item, onSelect }) => {
   return (
     <NavLink
       to={item.to}
-      end={item.to.includes("/dashboard")}
+      end={item.to === dashboardPath}
       onClick={onSelect}
       className={({ isActive }) =>
         `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition ${
@@ -110,7 +110,12 @@ const DashboardSidebar = ({ user, dashboardPath, onLogout, onSelect }) => {
           </p>
           <nav className="mt-3 space-y-1">
             {primaryItems.map((item) => (
-              <SidebarItem key={item.label} item={item} onSelect={onSelect} />
+              <SidebarItem
+                key={item.label}
+                item={item}
+                onSelect={onSelect}
+                dashboardPath={dashboardPath}
+              />
             ))}
           </nav>
         </section>
