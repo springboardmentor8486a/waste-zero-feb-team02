@@ -11,6 +11,8 @@ const DashboardLayout = ({ children }) => {
   const user = useAppStore((state) => state.currentUser);
   const logout = useAppStore((state) => state.logout);
   const loadCurrentUser = useAppStore((state) => state.loadCurrentUser);
+  const globalSearch = useAppStore((state) => state.globalSearch);
+  const setGlobalSearch = useAppStore((state) => state.setGlobalSearch);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [verificationNotice, setVerificationNotice] = useState("");
@@ -122,9 +124,20 @@ const DashboardLayout = ({ children }) => {
                 />
                 <input
                   type="text"
+                  value={globalSearch}
+                  onChange={(e) => setGlobalSearch(e.target.value)}
                   placeholder="Search pickups, opportunities..."
-                  className="w-full rounded-full border border-emerald-200 bg-white/80 py-2.5 pl-10 pr-4 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 dark:border-emerald-800 dark:bg-emerald-950/75 dark:text-emerald-100"
+                  className="w-full rounded-full border border-emerald-200 bg-white/80 py-2.5 pl-10 pr-10 text-sm text-emerald-900 outline-none transition focus:border-emerald-500 dark:border-emerald-800 dark:bg-emerald-950/75 dark:text-emerald-100"
                 />
+
+                {globalSearch && (
+                  <button
+                    onClick={() => setGlobalSearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 hover:text-red-500 transition"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
               </div>
 
               <button
@@ -140,7 +153,8 @@ const DashboardLayout = ({ children }) => {
               <div className="border-t border-amber-300/70 bg-amber-50 px-4 py-3 sm:px-6 lg:px-8 dark:border-amber-700/60 dark:bg-amber-900/20">
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                    Your email is not verified. Click verify to start email verification.
+                    Your email is not verified. Click verify to start email
+                    verification.
                   </p>
 
                   <div className="flex flex-wrap items-center gap-2">
