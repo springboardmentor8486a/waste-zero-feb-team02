@@ -29,6 +29,9 @@ const normalizeSkills = (skills) => {
   return null;
 };
 
+const normalizeTextField = (value) =>
+  typeof value === "string" ? value.trim() : "";
+
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 export const createOpportunity = async (req, res, next) => {
@@ -36,7 +39,18 @@ export const createOpportunity = async (req, res, next) => {
     const { title, description, required_skills, duration, location, status } =
       req.body;
 
-    if (!title || !description || !required_skills || !duration || !location) {
+    const normalizedTitle = normalizeTextField(title);
+    const normalizedDescription = normalizeTextField(description);
+    const normalizedDuration = normalizeTextField(duration);
+    const normalizedLocation = normalizeTextField(location);
+
+    if (
+      !normalizedTitle ||
+      !normalizedDescription ||
+      !required_skills ||
+      !normalizedDuration ||
+      !normalizedLocation
+    ) {
       return next(
         new AppError(
           "title, description, required_skills, duration, and location are required",
@@ -59,11 +73,11 @@ export const createOpportunity = async (req, res, next) => {
     }
 
     const opportunity = await Opportunity.create({
-      title,
-      description,
+      title: normalizedTitle,
+      description: normalizedDescription,
       required_skills: normalizedSkills,
-      duration,
-      location,
+      duration: normalizedDuration,
+      location: normalizedLocation,
       status,
       ngo_id: req.user.id,
     });
@@ -178,6 +192,17 @@ export const updateOpportunity = async (req, res, next) => {
         );
       }
       req.body.required_skills = normalizedSkills;
+    }
+
+    const textFields = ["title", "description", "duration", "location"];
+    for (const field of textFields) {
+      if (!(field in req.body)) continue;
+
+      const normalized = normalizeTextField(req.body[field]);
+      if (!normalized) {
+        return next(new AppError(`${field} cannot be empty`, 400));
+      }
+      req.body[field] = normalized;
     }
 
     const opportunity = await Opportunity.findById(id);

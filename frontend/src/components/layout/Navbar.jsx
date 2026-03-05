@@ -29,9 +29,12 @@ const Navbar = () => {
         <Link
           to="/"
           onClick={closeMenu}
-          className="inline-flex items-center gap-2 text-xl font-extrabold tracking-tight text-emerald-700 dark:text-emerald-300"
+          className="group inline-flex items-center gap-2 text-xl font-extrabold tracking-tight text-emerald-700 dark:text-emerald-300"
         >
-          <Recycle size={22} />
+          <Recycle
+            size={22}
+            className="transition-transform duration-700 group-hover:rotate-180"
+          />
           WasteZero
         </Link>
 
@@ -51,6 +54,20 @@ const Navbar = () => {
           <ThemeControl compact />
           {isAuthenticated ? (
             <>
+              <Link
+                to="/opportunities"
+                className="rounded-full border border-emerald-500 px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-200 dark:hover:bg-emerald-900/30"
+              >
+                Opportunities
+              </Link>
+              {currentUser?.role === "NGO" && (
+                <Link
+                  to="/opportunities/create"
+                  className="rounded-full border border-emerald-500 px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-200 dark:hover:bg-emerald-900/30"
+                >
+                  Create
+                </Link>
+              )}
               <Link
                 to={dashboardPath}
                 className="rounded-full border border-emerald-500 px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-200 dark:hover:bg-emerald-900/30"
@@ -112,6 +129,22 @@ const Navbar = () => {
             <ThemeControl compact />
             {isAuthenticated ? (
               <>
+                <Link
+                  to="/opportunities"
+                  onClick={closeMenu}
+                  className="rounded-full border border-emerald-500 px-4 py-2 text-xs font-semibold text-emerald-700 dark:border-emerald-400 dark:text-emerald-200"
+                >
+                  Opportunities
+                </Link>
+                {currentUser?.role === "NGO" && (
+                  <Link
+                    to="/opportunities/create"
+                    onClick={closeMenu}
+                    className="rounded-full border border-emerald-500 px-4 py-2 text-xs font-semibold text-emerald-700 dark:border-emerald-400 dark:text-emerald-200"
+                  >
+                    Create
+                  </Link>
+                )}
                 <Link
                   to={dashboardPath}
                   onClick={closeMenu}

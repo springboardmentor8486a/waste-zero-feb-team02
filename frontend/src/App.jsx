@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AppLoader from "./components/common/AppLoader";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
@@ -33,6 +34,7 @@ function App() {
   const authReady = useAppStore((state) => state.authReady);
   const initializeAuth = useAppStore((state) => state.initializeAuth);
   const hasInitialized = useRef(false);
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
     if (hasInitialized.current) return;
@@ -40,13 +42,12 @@ function App() {
     initializeAuth();
   }, [initializeAuth]);
 
-  if (!authReady) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-slate-600 dark:bg-slate-950 dark:text-slate-300">
-        Initializing WasteZero...
-      </div>
-    );
-  }
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSplashDone(true), 1100);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  if (!authReady || !splashDone) return <AppLoader />;
 
   return (
     <BrowserRouter>
@@ -84,11 +85,22 @@ function App() {
         />
 
         <Route
-          path="/dashboard/volunteer/opportunities"
+          path="/opportunities"
           element={
-            <ProtectedRoute allowedRoles={["volunteer"]}>
+            <ProtectedRoute allowedRoles={["volunteer", "NGO"]}>
               <DashboardLayout>
                 <OpportunitiesPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/opportunities/create"
+          element={
+            <ProtectedRoute allowedRoles={["NGO"]}>
+              <DashboardLayout>
+                <CreateOpportunity />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -106,6 +118,22 @@ function App() {
         />
 
         <Route
+          path="/opportunities/edit/:id"
+          element={
+            <ProtectedRoute allowedRoles={["NGO"]}>
+              <DashboardLayout>
+                <EditOpportunity />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/volunteer/opportunities"
+          element={<Navigate to="/opportunities" replace />}
+        />
+
+        <Route
           path="/dashboard/ngo/opportunities"
           element={
             <ProtectedRoute allowedRoles={["NGO"]}>
@@ -118,13 +146,7 @@ function App() {
 
         <Route
           path="/dashboard/ngo/create"
-          element={
-            <ProtectedRoute allowedRoles={["NGO"]}>
-              <DashboardLayout>
-                <CreateOpportunity />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
+          element={<Navigate to="/opportunities/create" replace />}
         />
 
         <Route

@@ -13,8 +13,6 @@ export const useAppStore = create(
       ...createAuthSlice(set, get),
       ...createUserSlice(set, get),
       ...createOpportunitySlice(set),
-      globalSearch: "",
-      setGlobalSearch: (value) => set({ globalSearch: value }),
     }),
     {
       name: "wastezero-storage",
