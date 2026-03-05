@@ -1,98 +1,131 @@
-import { apiClient } from "../api/axiosClient";
-import { useEffect, useState, useCallback } from "react";
-import { LayoutList, Pencil, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { LayoutList, MapPin, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
-
+import { opportunityApi } from "../api/opportunityApi";
 import { useAppStore } from "../store/useAppStore";
+
+const PAGE_SIZE = 6;
+
+const statusBadgeClass = (status) => {
+  if (status === "closed") {
+    return "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300";
+  }
+  if (status === "in-progress") {
+    return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
+  }
+  return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300";
+};
 
 const NGOOpportunities = () => {
   const user = useAppStore((state) => state.currentUser);
-
-  const [opportunities, setOpportunities] = useState([]);
-  const [deleteId, setDeleteId] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState("all");
   const globalSearch = useAppStore((state) => state.globalSearch);
+  const [opportunities, setOpportunities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [page, setPage] = useState(1);
 
-  const fetchOpportunities = useCallback(async () => {
-    if (!user?._id) return;
+  const userId = user?._id || user?.id || "";
+
+  const fetchMyOpportunities = useCallback(async () => {
+    if (!userId) return;
 
     setLoading(true);
+    setError("");
 
     try {
-      const res = await apiClient.get("/opportunities");
-
-      const myOpportunities = res.data.opportunities.filter(
-        (op) => op.ngo_id?._id === user?._id,
+      const data = await opportunityApi.getAll();
+      const mine = (data?.opportunities || [])
+        .filter((opportunity) => opportunity?.ngo_id?._id === userId)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setOpportunities(mine);
+    } catch (fetchError) {
+      setError(
+        fetchError?.response?.data?.message || "Unable to load your opportunities.",
       );
-
-      setOpportunities(
-        myOpportunities.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-        ),
-      );
-    } catch (error) {
-      console.error(error);
     } finally {
       setLoading(false);
     }
-  }, [user?._id]);
+  }, [userId]);
 
   useEffect(() => {
-    fetchOpportunities();
-  }, [fetchOpportunities]);
+    fetchMyOpportunities();
+  }, [fetchMyOpportunities]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [globalSearch, statusFilter]);
+
+  const filteredOpportunities = useMemo(() => {
+    const searchValue = globalSearch.trim().toLowerCase();
+
+    return opportunities
+      .filter((opportunity) => {
+        if (!searchValue) return true;
+
+        const title = opportunity.title?.toLowerCase() || "";
+        const location = opportunity.location?.toLowerCase() || "";
+        const skills = (opportunity.required_skills || []).join(" ").toLowerCase();
+        return (
+          title.includes(searchValue) ||
+          location.includes(searchValue) ||
+          skills.includes(searchValue)
+        );
+      })
+      .filter((opportunity) => {
+        if (statusFilter === "all") return true;
+        return opportunity.status === statusFilter;
+      });
+  }, [globalSearch, opportunities, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredOpportunities.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedOpportunities = filteredOpportunities.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
 
   const handleDelete = async () => {
-    if (!deleteId) return;
+    if (!deleteTarget) return;
 
+    setDeleteLoading(true);
     try {
-      await apiClient.delete(`/opportunities/${deleteId}`);
-      toast.success("Deleted successfully");
-      fetchOpportunities();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Delete failed");
+      await opportunityApi.remove(deleteTarget._id);
+      toast.success("Opportunity deleted successfully.");
+      setOpportunities((prev) => prev.filter((item) => item._id !== deleteTarget._id));
+      setDeleteTarget(null);
+    } catch (deleteError) {
+      toast.error(deleteError?.response?.data?.message || "Delete failed.");
     } finally {
-      setDeleteId(null);
+      setDeleteLoading(false);
     }
   };
 
-  const searchValue = globalSearch.trim().toLowerCase();
-
-  const filteredOpportunities = opportunities
-    .filter((op) => {
-      if (!searchValue) return true;
-
-      return (
-        op.title?.toLowerCase().includes(searchValue) ||
-        op.location?.toLowerCase().includes(searchValue)
-      );
-    })
-    .filter((op) => {
-      if (filterStatus === "all") return true;
-      return op.status === filterStatus;
-    });
-
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold flex items-center gap-2">
-        <LayoutList size={22} />
-        My Opportunities
-      </h1>
+    <div className="space-y-6">
+      <section className="rounded-3xl border border-emerald-200/70 bg-white/85 p-6 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/60">
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-emerald-950 dark:text-emerald-50">
+          <LayoutList size={22} />
+          My Opportunities
+        </h1>
+        <p className="mt-2 text-sm text-emerald-900/70 dark:text-emerald-100/70">
+          Manage opportunities created by your NGO account.
+        </p>
+      </section>
 
-      <div className="flex gap-3">
-        {["all", "open", "closed"].map((status) => (
+      <div className="flex flex-wrap gap-2">
+        {["all", "open", "closed", "in-progress"].map((status) => (
           <button
             key={status}
-            onClick={() => setFilterStatus(status)}
-            className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 ${
-              filterStatus === status
-                ? status === "open"
-                  ? "bg-emerald-600 text-white shadow-md"
-                  : status === "closed"
-                    ? "bg-rose-600 text-white shadow-md"
-                    : "bg-emerald-500 text-white shadow-md"
-                : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:hover:bg-emerald-800/60"
+            type="button"
+            onClick={() => setStatusFilter(status)}
+            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+              statusFilter === status
+                ? "bg-emerald-600 text-white"
+                : "border border-emerald-300 bg-white text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/55 dark:text-emerald-200"
             }`}
           >
             {status}
@@ -101,99 +134,124 @@ const NGOOpportunities = () => {
       </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <p className="text-sm text-emerald-700 dark:text-emerald-300">Loading...</p>
+      ) : error ? (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/40 dark:bg-rose-900/20 dark:text-rose-300">
+          {error}
+        </p>
       ) : filteredOpportunities.length === 0 ? (
-        <p>No opportunities found.</p>
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+          No opportunities found.
+        </p>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-6">
-          {filteredOpportunities.map((op) => (
-            <div
-              key={op._id}
-              className="group relative rounded-3xl border 
-      border-emerald-200 dark:border-emerald-900/40
-      bg-white dark:bg-emerald-950/50
-      p-6 shadow-sm hover:shadow-xl 
-      transition-all duration-300 hover:-translate-y-1"
-            >
-              <span
-                className={`absolute top-5 right-5 px-3 py-1 text-xs font-semibold rounded-full ${
-                  op.status === "open"
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"
-                    : "bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-300"
-                }`}
+        <div className="space-y-5">
+          <div className="grid gap-5 md:grid-cols-2">
+            {paginatedOpportunities.map((opportunity) => (
+              <article
+                key={opportunity._id}
+                className="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/60"
               >
-                {op.status.toUpperCase()}
-              </span>
-              <h3 className="text-lg font-bold text-gray-800 dark:text-emerald-100 pr-16">
-                {op.title}
-              </h3>
-              <p className="mt-2 text-sm text-gray-500 dark:text-emerald-300">
-                📍 {op.location}
-              </p>
-              <p className="mt-3 text-xs text-gray-400 dark:text-emerald-400">
-                Created on {new Date(op.createdAt).toLocaleDateString()}
-              </p>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100">
+                      {opportunity.title}
+                    </h2>
+                    <p className="mt-2 flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+                      <MapPin size={14} />
+                      {opportunity.location}
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusBadgeClass(
+                      opportunity.status,
+                    )}`}
+                  >
+                    {opportunity.status}
+                  </span>
+                </div>
 
-              {/* Skills */}
-              {op.required_skills?.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {op.required_skills.slice(0, 4).map((skill, index) => (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(opportunity.required_skills || []).map((skill) => (
                     <span
-                      key={index}
-                      className="text-xs px-2.5 py-1 rounded-full 
-        bg-emerald-100 text-emerald-700 
-        dark:bg-emerald-800/40 dark:text-emerald-300"
+                      key={`${opportunity._id}-${skill}`}
+                      className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
                     >
                       {skill}
                     </span>
                   ))}
-
-                  {op.required_skills.length > 4 && (
-                    <span
-                      className="text-xs px-2.5 py-1 rounded-full 
-        bg-gray-200 text-gray-600 
-        dark:bg-gray-700 dark:text-gray-300"
-                    >
-                      +{op.required_skills.length - 4} more
-                    </span>
-                  )}
                 </div>
-              )}
 
-              <div className="mt-5 border-t border-gray-100 dark:border-emerald-900/40 pt-4 flex justify-end gap-3">
-                <Link
-                  to={`/dashboard/ngo/edit/${op._id}`}
-                  className="flex items-center gap-1 px-4 py-1.5 text-sm font-medium rounded-lg 
-    bg-blue-50 text-blue-600 hover:bg-blue-100 
-    dark:bg-blue-900/30 dark:text-blue-300 transition"
-                >
-                  <Pencil size={14} />
-                  Edit
-                </Link>
+                <div className="mt-4 flex justify-end gap-2 border-t border-emerald-100 pt-4 dark:border-emerald-900/40">
+                  <Link
+                    to={`/opportunities/edit/${opportunity._id}`}
+                    className="inline-flex items-center gap-1 rounded-lg border border-sky-300 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-50 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-900/30"
+                  >
+                    <Pencil size={13} />
+                    Edit
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(opportunity)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/30"
+                  >
+                    <Trash2 size={13} />
+                    Delete
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
 
-                <button
-                  onClick={() => setDeleteId(op._id)}
-                  className="flex items-center gap-1 px-4 py-1.5 text-sm font-medium rounded-lg 
-    bg-rose-50 text-rose-600 hover:bg-rose-100 
-    dark:bg-rose-900/30 dark:text-rose-300 transition"
-                >
-                  <Trash2 size={14} />
-                  Delete
-                </button>
-              </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                className="rounded-lg border border-emerald-300 px-3 py-1.5 text-xs font-semibold text-emerald-700 disabled:opacity-50 dark:border-emerald-800 dark:text-emerald-300"
+              >
+                Previous
+              </button>
+              <span className="text-xs text-emerald-700 dark:text-emerald-300">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                className="rounded-lg border border-emerald-300 px-3 py-1.5 text-xs font-semibold text-emerald-700 disabled:opacity-50 dark:border-emerald-800 dark:text-emerald-300"
+              >
+                Next
+              </button>
             </div>
-          ))}
+          )}
         </div>
       )}
 
-      {deleteId && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl w-80">
-            <p>Are you sure you want to delete this opportunity?</p>
-            <div className="flex justify-end gap-3 mt-4">
-              <button onClick={() => setDeleteId(null)}>Cancel</button>
-              <button onClick={handleDelete} className="text-red-600">
-                Delete
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-emerald-950">
+            <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100">
+              Delete Opportunity
+            </h2>
+            <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">
+              Delete "{deleteTarget.title}"? This action cannot be undone.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-lg border border-emerald-300 px-4 py-2 text-xs font-semibold text-emerald-700 dark:border-emerald-700 dark:text-emerald-200"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
+              >
+                {deleteLoading ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

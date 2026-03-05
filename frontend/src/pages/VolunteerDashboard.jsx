@@ -1,26 +1,27 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect, useMemo, useState } from "react";
 import { ClipboardList, Mail, MapPin, ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
+import { opportunityApi } from "../api/opportunityApi";
 import { useAppStore } from "../store/useAppStore";
 
 const VolunteerDashboard = () => {
   const user = useAppStore((state) => state.currentUser);
   const [loading, setLoading] = useState(true);
   const [opportunities, setOpportunities] = useState([]);
+  const [fetchError, setFetchError] = useState("");
 
   useEffect(() => {
     const fetchOpportunities = async () => {
+      setLoading(true);
+      setFetchError("");
+
       try {
-        const res = await axios.get(
-          "http://localhost:3000/api/v1/opportunities",
-        );
-
-        console.log("API RESPONSE:", res.data);
-
-        setOpportunities(res.data?.opportunities || []);
+        const data = await opportunityApi.getAll();
+        setOpportunities(data?.opportunities || []);
       } catch (error) {
-        console.error("Fetch error:", error);
+        setFetchError(
+          error?.response?.data?.message || "Unable to load opportunities.",
+        );
         setOpportunities([]);
       } finally {
         setLoading(false);
@@ -29,6 +30,11 @@ const VolunteerDashboard = () => {
 
     fetchOpportunities();
   }, []);
+
+  const previewOpportunities = useMemo(
+    () => opportunities.slice(0, 2),
+    [opportunities],
+  );
 
   return (
     <div className="space-y-6">
@@ -103,15 +109,21 @@ const VolunteerDashboard = () => {
               </h2>
 
               <Link
-                to="/dashboard/volunteer/opportunities"
+                to="/opportunities"
                 className="text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-300"
               >
-                View All →
+                View all
               </Link>
             </div>
 
             {loading ? (
-              <p className="mt-4 text-sm">Loading...</p>
+              <p className="mt-4 text-sm text-emerald-700 dark:text-emerald-300">
+                Loading...
+              </p>
+            ) : fetchError ? (
+              <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/40 dark:bg-rose-900/20 dark:text-rose-300">
+                {fetchError}
+              </p>
             ) : (
               <div className="mt-5 grid gap-4">
                 <p className="text-sm text-emerald-800 dark:text-emerald-200">
@@ -119,35 +131,37 @@ const VolunteerDashboard = () => {
                   <span className="font-semibold">{opportunities.length}</span>
                 </p>
 
-                {opportunities.slice(0, 2).map((opp) => (
+                {previewOpportunities.map((opportunity) => (
                   <div
-                    key={opp._id}
-                    className="group rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 dark:border-emerald-900/50 dark:bg-emerald-950/60"
+                    key={opportunity._id}
+                    className="group rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-emerald-900/50 dark:bg-emerald-950/60"
                   >
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="text-base font-semibold text-emerald-900 dark:text-emerald-100">
-                          {opp.title}
+                          {opportunity.title}
                         </h3>
 
-                        <p className="mt-1 text-xs text-emerald-800/70 dark:text-emerald-200/70 line-clamp-2">
-                          {opp.description}
+                        <p className="mt-1 line-clamp-2 text-xs text-emerald-800/70 dark:text-emerald-200/70">
+                          {opportunity.description}
                         </p>
                       </div>
 
-                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-200">
-                        {opp.status || "Open"}
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold capitalize text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-200">
+                        {opportunity.status || "open"}
                       </span>
                     </div>
 
-                    <div className="mt-3 text-xs text-emerald-700 dark:text-emerald-300">
-                      📍 {opp.location}
+                    <div className="mt-3 flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-300">
+                      <MapPin size={13} />
+                      {opportunity.location}
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </section>
+
           <section className="rounded-3xl border border-emerald-200/70 bg-white/85 p-6 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/60">
             <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-emerald-950 dark:text-emerald-50">
               <ClipboardList size={18} />

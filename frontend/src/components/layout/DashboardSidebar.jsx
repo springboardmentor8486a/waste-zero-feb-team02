@@ -9,7 +9,7 @@ import {
   UserRound,
   CalendarDays,
   BriefcaseBusiness,
-  Gauge,
+  PlusCircle,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import ThemeControl from "../theme/ThemeControl";
@@ -19,16 +19,20 @@ const createPrimaryItems = (dashboardPath, role) => {
     return [
       { label: "Dashboard", icon: LayoutDashboard, to: dashboardPath },
       {
-        label: "Schedule Pickup",
+        label: "My Opportunities",
         icon: CalendarDays,
-        to: "/dashboard/ngo/schedule",
-      },
-      {
-        label: "Opportunities",
-        icon: BriefcaseBusiness,
         to: "/dashboard/ngo/opportunities",
       },
-      { label: "Messages", icon: MessageCircle, to: "/dashboard/messages" },
+      {
+        label: "Browse Opportunities",
+        icon: BriefcaseBusiness,
+        to: "/opportunities",
+      },
+      {
+        label: "Create Opportunity",
+        icon: PlusCircle,
+        to: "/opportunities/create",
+      },
     ];
   }
 
@@ -38,10 +42,9 @@ const createPrimaryItems = (dashboardPath, role) => {
       {
         label: "Opportunities",
         icon: BriefcaseBusiness,
-        to: "/dashboard/volunteer/opportunities",
+        to: "/opportunities",
       },
-      { label: "Messages", icon: MessageCircle, to: "/dashboard/messages" },
-      { label: "My Impact", icon: Gauge, to: "/dashboard/volunteer/impact" },
+      { label: "Messages", icon: MessageCircle },
     ];
   }
 
@@ -97,9 +100,12 @@ const DashboardSidebar = ({ user, dashboardPath, onLogout, onSelect }) => {
       <Link
         to="/"
         onClick={onSelect}
-        className="inline-flex items-center gap-2 px-2 text-2xl font-extrabold text-emerald-700 dark:text-emerald-300"
+        className="group inline-flex items-center gap-2 px-2 text-2xl font-extrabold text-emerald-700 dark:text-emerald-300"
       >
-        <Recycle size={24} />
+        <Recycle
+          size={24}
+          className="transition-transform duration-700 group-hover:rotate-180"
+        />
         WasteZero
       </Link>
 
