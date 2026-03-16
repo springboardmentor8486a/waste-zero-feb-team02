@@ -1,4 +1,4 @@
-import { Menu, Recycle, X } from "lucide-react";
+import { Bell, Menu, Recycle, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAppStore } from "../../store/useAppStore";
@@ -15,6 +15,8 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
   const currentUser = useAppStore((state) => state.currentUser);
+  const unreadCount = useAppStore((state) => state.unreadCount);
+  const markAllAsRead = useAppStore((state) => state.markAllAsRead);
 
   const dashboardPath = useMemo(() => {
     if (currentUser?.role === "NGO") return "/dashboard/ngo";
@@ -54,6 +56,20 @@ const Navbar = () => {
           <ThemeControl compact />
           {isAuthenticated ? (
             <>
+              <div className="relative mr-2">
+                <button
+                  onClick={markAllAsRead}
+                  className="relative rounded-full p-2 text-emerald-700 transition hover:bg-emerald-50 dark:text-emerald-200 dark:hover:bg-emerald-900/30"
+                  aria-label="Notifications"
+                >
+                  <Bell size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm transition-all animate-pulse">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+              </div>
               <Link
                 to="/opportunities"
                 className="rounded-full border border-emerald-500 px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-200 dark:hover:bg-emerald-900/30"
@@ -129,6 +145,20 @@ const Navbar = () => {
             <ThemeControl compact />
             {isAuthenticated ? (
               <>
+                <button
+                  onClick={() => {
+                    markAllAsRead();
+                    closeMenu();
+                  }}
+                  className="flex w-full items-center justify-between rounded-full border border-emerald-500 px-4 py-2 text-xs font-semibold text-emerald-700 dark:border-emerald-400 dark:text-emerald-200"
+                >
+                  <span>Notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
                 <Link
                   to="/opportunities"
                   onClick={closeMenu}

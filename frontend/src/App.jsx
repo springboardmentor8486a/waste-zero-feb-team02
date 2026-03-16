@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { Toaster } from "react-hot-toast";
 import AppLoader from "./components/common/AppLoader";
 import DashboardLayout from "./components/layout/DashboardLayout";
+import { useSocket } from "./hooks/useSocket";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -35,6 +37,9 @@ function App() {
   const initializeAuth = useAppStore((state) => state.initializeAuth);
   const hasInitialized = useRef(false);
   const [splashDone, setSplashDone] = useState(false);
+
+  // Initialize Socket connection
+  useSocket();
 
   useEffect(() => {
     if (hasInitialized.current) return;

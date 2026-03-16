@@ -15,6 +15,7 @@ Current scope includes:
 - Vite 7
 - Tailwind CSS 4
 - Zustand 5
+- Socket.io-client
 - Axios
 - MUI + Lucide React (UI/icons)
 
@@ -52,6 +53,7 @@ Use `.env.example`:
 VITE_APP_ENV=development
 VITE_APP_NAME=Waste Zero
 VITE_API_BASE_URL=http://localhost:3000/api/v1
+VITE_SOCKET_URL=http://localhost:3000
 VITE_ENABLE_DEBUG_LOGS=false
 ```
 
@@ -95,6 +97,17 @@ Main state files:
 - `src/store/slices/authSlice.js`
 - `src/store/slices/userSlice.js`
 - `src/store/slices/themeSlice.js`
+- `src/store/slices/notificationSlice.js`
+
+## Notification System
+- Real-time notifications powered by `Socket.io`.
+- In-app toasts via `react-hot-toast`.
+- Notification badge in Navbar showing unread count.
+- Hybrid handling: Initial fetch via REST API, real-time updates via WebSocket.
+- Main files:
+  - `src/hooks/useSocket.js`
+  - `src/store/slices/notificationSlice.js`
+  - `src/api/notificationApi.js`
 
 ## Project Structure
 ```text
