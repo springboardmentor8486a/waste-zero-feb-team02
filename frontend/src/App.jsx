@@ -1,3 +1,5 @@
+import AdminRoute from "./components/auth/AdminRoute";
+import Dashboard from "./pages/admin/Dashboard";
 import { useEffect, useRef, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -19,6 +21,7 @@ import OpportunityDetailsPage from "./pages/OpportunityDetailsPage";
 import MatchesPage from "./pages/MatchesPage";
 import MessagesPage from "./pages/MessagesPage";
 import ChatPage from "./pages/ChatPage";
+
 import { useAppStore } from "./store/useAppStore";
 
 const getDashboardRoute = (user) =>
@@ -218,6 +221,17 @@ function App() {
                 <ProfilePage />
               </DashboardLayout>
             </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <DashboardLayout>
+                <Dashboard />
+              </DashboardLayout>
+            </AdminRoute>
           }
         />
 
